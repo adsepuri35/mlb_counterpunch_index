@@ -26,6 +26,7 @@ LEADERBOARD_COLUMNS = [
     "plate_x",
     "plate_z",
     "batter",
+    "pitcher",
     "pitch_type",
     "zone",
     "balls",
@@ -39,6 +40,17 @@ def parse_args():
     parser.add_argument("--input-csv", required=True)
     parser.add_argument("--min-opportunities", type=int, default=100)
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument(
+        "--same-pitcher",
+        action="store_true",
+        help="Require the repeat pitch to come from the same pitcher as the loss pitch.",
+    )
+    parser.add_argument(
+        "--min-baseline-sample-size",
+        type=int,
+        default=1,
+        help="Only score opportunities with at least this many baseline pitches.",
+    )
     parser.add_argument("--limit", type=int, default=25)
     parser.add_argument("--output")
     return parser.parse_args()
@@ -68,13 +80,39 @@ def add_hitter_names(leaderboard):
     return leaderboard[cols]
 
 
-def format_leaderboard(leaderboard, start, end, min_opportunities, threshold):
+def assign_support_tier(avg_baseline_sample_size):
+    if avg_baseline_sample_size < 15:
+        return "thin"
+    if avg_baseline_sample_size < 30:
+        return "medium"
+    return "strong"
+
+
+def add_support_tiers(leaderboard):
+    leaderboard = leaderboard.copy()
+    leaderboard["support_tier"] = leaderboard["avg_baseline_sample_size"].apply(
+        assign_support_tier
+    )
+    return leaderboard
+
+
+def format_leaderboard(
+    leaderboard,
+    start,
+    end,
+    min_opportunities,
+    threshold,
+    same_pitcher,
+    min_baseline_sample_size,
+):
     leaderboard = leaderboard.copy().reset_index(drop=True)
     leaderboard.insert(0, "rank", leaderboard.index + 1)
     leaderboard.insert(1, "date_start", start)
     leaderboard.insert(2, "date_end", end)
     leaderboard.insert(3, "min_opportunities", min_opportunities)
     leaderboard.insert(4, "location_threshold", threshold)
+    leaderboard.insert(5, "same_pitcher", same_pitcher)
+    leaderboard.insert(6, "min_baseline_sample_size", min_baseline_sample_size)
 
     cols = [
         "rank",
@@ -82,6 +120,8 @@ def format_leaderboard(leaderboard, start, end, min_opportunities, threshold):
         "date_end",
         "min_opportunities",
         "location_threshold",
+        "same_pitcher",
+        "min_baseline_sample_size",
         "batter",
         "hitter_name",
         "opportunities",
@@ -89,6 +129,7 @@ def format_leaderboard(leaderboard, start, end, min_opportunities, threshold):
         "repeat_delta_run_exp",
         "baseline_delta_run_exp",
         "avg_baseline_sample_size",
+        "support_tier",
     ]
     return leaderboard[cols]
 
@@ -107,7 +148,10 @@ def main():
 
     print("Finding opportunities...", flush=True)
     opportunities = find_counterpunch_opportunities(
-        df, threshold=args.threshold, scorable=scorable
+        df,
+        threshold=args.threshold,
+        scorable=scorable,
+        same_pitcher=args.same_pitcher,
     )
     print(f"Found opportunities: {len(opportunities)}", flush=True)
 
@@ -117,6 +161,7 @@ def main():
         threshold=args.threshold,
         show_progress=True,
         scorable=scorable,
+        min_baseline_sample_size=args.min_baseline_sample_size,
     )
     hitter_scores = summarize_hitter_scores(scores)
 
@@ -126,6 +171,7 @@ def main():
 
     leaderboard = hitter_scores[hitter_scores["opportunities"] >= args.min_opportunities]
     leaderboard = leaderboard.sort_values("counterpunch_index", ascending=False)
+    leaderboard = add_support_tiers(leaderboard)
     leaderboard = add_hitter_names(leaderboard)
     leaderboard = format_leaderboard(
         leaderboard,
@@ -133,6 +179,8 @@ def main():
         end,
         args.min_opportunities,
         args.threshold,
+        args.same_pitcher,
+        args.min_baseline_sample_size,
     )
 
     if args.output:
@@ -145,6 +193,8 @@ def main():
     print(f"Matched opportunities: {len(opportunities)}")
     print(f"Minimum opportunities: {args.min_opportunities}")
     print(f"Location threshold: {args.threshold}")
+    print(f"Same pitcher: {args.same_pitcher}")
+    print(f"Minimum baseline sample size: {args.min_baseline_sample_size}")
     print(f"Qualified hitters: {len(leaderboard)}")
     if args.output:
         print(f"Output: {args.output}")

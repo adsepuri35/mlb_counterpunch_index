@@ -12,7 +12,7 @@ def prepare_scorable_pitches(df):
     )
 
 
-def find_counterpunch_opportunities(df, threshold=0.5, scorable=None):
+def find_counterpunch_opportunities(df, threshold=0.5, scorable=None, same_pitcher=False):
     if scorable is None:
         scorable = prepare_scorable_pitches(df)
     opportunities = []
@@ -25,6 +25,7 @@ def find_counterpunch_opportunities(df, threshold=0.5, scorable=None):
         plate_x = group["plate_x"].to_numpy()
         plate_z = group["plate_z"].to_numpy()
         is_loss = group["is_loss"].to_numpy()
+        pitchers = group["pitcher"].to_numpy() if same_pitcher else None
 
         for i in range(len(group) - 1):
             if not is_loss[i]:
@@ -32,6 +33,8 @@ def find_counterpunch_opportunities(df, threshold=0.5, scorable=None):
 
             for j in range(i + 1, len(group)):
                 if at_bats[j] <= at_bats[i]:
+                    continue
+                if same_pitcher and pitchers[j] != pitchers[i]:
                     continue
                 if not is_near_location(
                     plate_x[i], plate_z[i], plate_x[j], plate_z[j], threshold_sq
@@ -69,6 +72,7 @@ def score_opportunities(
     show_progress=False,
     progress_every=1000,
     scorable=None,
+    min_baseline_sample_size=1,
 ):
     if not opportunities:
         return pd.DataFrame()
@@ -103,7 +107,7 @@ def score_opportunities(
             - repeat_pitch["delta_run_exp"]
         )
         baseline_count = near_location.sum() - 1
-        if baseline_count <= 0:
+        if baseline_count < min_baseline_sample_size:
             continue
 
         baseline = baseline_sum / baseline_count

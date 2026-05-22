@@ -80,9 +80,12 @@ counterpunch_index
 repeat_delta_run_exp
 baseline_delta_run_exp
 avg_baseline_sample_size
+support_tier
+same_pitcher
+min_baseline_sample_size
 ```
 
-Always interpret rankings with sample size.
+Always interpret rankings with sample size. `support_tier` is thin below 15 average baseline pitches, medium from 15 to below 30, and strong at 30 or more. Use `--min-baseline-sample-size` to filter out opportunities with thin individual baselines. Use `--same-pitcher` to require the repeat pitch to come from the same pitcher as the loss pitch while keeping the baseline hitter-specific.
 
 ## Validate Leaderboard
 

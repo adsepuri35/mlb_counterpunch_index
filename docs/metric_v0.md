@@ -18,7 +18,7 @@ A later pitch is considered a similar attack when it is in a later plate appeara
 - `pitch_group`
 - `count_bucket`
 
-The repeat pitch must also be near the loss pitch location using Statcast `plate_x` and `plate_z`. The current threshold is `0.5` feet.
+The repeat pitch must also be near the loss pitch location using Statcast `plate_x` and `plate_z`. The current threshold is `0.5` feet. The optional same-pitcher analysis path also requires the loss pitch and repeat pitch to have the same `pitcher`; the baseline remains hitter-specific.
 
 ## Buckets
 
@@ -50,6 +50,8 @@ baseline_sample_size = count of nearby baseline pitches, excluding the repeat pi
 opportunity_score = repeat_pitch_delta_run_exp - baseline
 ```
 
+Opportunities can optionally be filtered with `min_baseline_sample_size` so thin individual baselines are not scored.
+
 The repeat pitch is excluded from its own baseline.
 
 ## Hitter Score
@@ -58,6 +60,7 @@ The repeat pitch is excluded from its own baseline.
 counterpunch_index = average(opportunity_score)
 opportunities = number of matched repeat attacks
 avg_baseline_sample_size = average baseline_sample_size across scored opportunities
+support_tier = thin if avg_baseline_sample_size < 15, medium if < 30, otherwise strong
 ```
 
 Leaderboards must show sample size alongside the score.

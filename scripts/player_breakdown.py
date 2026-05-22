@@ -22,6 +22,17 @@ def parse_args():
     parser.add_argument("--start")
     parser.add_argument("--end")
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument(
+        "--same-pitcher",
+        action="store_true",
+        help="Require the repeat pitch to come from the same pitcher as the loss pitch.",
+    )
+    parser.add_argument(
+        "--min-baseline-sample-size",
+        type=int,
+        default=1,
+        help="Only score opportunities with at least this many baseline pitches.",
+    )
     return parser.parse_args()
 
 
@@ -68,7 +79,10 @@ def main():
 
     scorable = prepare_scorable_pitches(df)
     opportunities = find_counterpunch_opportunities(
-        df, threshold=args.threshold, scorable=scorable
+        df,
+        threshold=args.threshold,
+        scorable=scorable,
+        same_pitcher=args.same_pitcher,
     )
     scores = score_opportunities(
         df,
@@ -76,12 +90,15 @@ def main():
         threshold=args.threshold,
         show_progress=True,
         scorable=scorable,
+        min_baseline_sample_size=args.min_baseline_sample_size,
     )
 
     name = hitter_name(args.batter)
     print(f"Hitter: {name} ({args.batter})")
     print(f"Date range: {start} to {end}")
     print(f"Location threshold: {args.threshold}")
+    print(f"Same pitcher: {args.same_pitcher}")
+    print(f"Minimum baseline sample size: {args.min_baseline_sample_size}")
     print(f"Opportunities: {len(scores)}")
 
     if scores.empty:
