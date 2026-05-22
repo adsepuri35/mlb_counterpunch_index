@@ -11,9 +11,27 @@ from counterpunch.buckets import add_attack_buckets
 from counterpunch.loss_events import add_loss_flags
 from counterpunch.metric import (
     find_counterpunch_opportunities,
+    prepare_scorable_pitches,
     score_opportunities,
     summarize_hitter_scores,
 )
+
+
+LEADERBOARD_COLUMNS = [
+    "game_date",
+    "game_pk",
+    "at_bat_number",
+    "pitch_number",
+    "delta_run_exp",
+    "plate_x",
+    "plate_z",
+    "batter",
+    "pitch_type",
+    "zone",
+    "balls",
+    "strikes",
+    "description",
+]
 
 
 def parse_args():
@@ -28,6 +46,8 @@ def parse_args():
 
 def add_hitter_names(leaderboard):
     if leaderboard.empty:
+        leaderboard = leaderboard.copy()
+        leaderboard["hitter_name"] = []
         return leaderboard
 
     ids = leaderboard["batter"].dropna().astype(int).unique().tolist()
@@ -75,15 +95,19 @@ def format_leaderboard(leaderboard, start, end, min_opportunities, threshold):
 def main():
     args = parse_args()
 
-    df = pd.read_csv(args.input_csv).reset_index(drop=True)
+    df = pd.read_csv(args.input_csv, usecols=LEADERBOARD_COLUMNS).reset_index(drop=True)
     start = str(df["game_date"].min()) if "game_date" in df.columns else "unknown"
     end = str(df["game_date"].max()) if "game_date" in df.columns else "unknown"
 
     df = add_attack_buckets(df)
     df = add_loss_flags(df)
 
+    scorable = prepare_scorable_pitches(df)
+
     print("Finding opportunities...", flush=True)
-    opportunities = find_counterpunch_opportunities(df, threshold=args.threshold)
+    opportunities = find_counterpunch_opportunities(
+        df, threshold=args.threshold, scorable=scorable
+    )
     print(f"Found opportunities: {len(opportunities)}", flush=True)
 
     scores = score_opportunities(
@@ -91,6 +115,7 @@ def main():
         opportunities,
         threshold=args.threshold,
         show_progress=True,
+        scorable=scorable,
     )
     hitter_scores = summarize_hitter_scores(scores)
 

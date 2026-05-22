@@ -8,7 +8,11 @@ sys.path.append(str(Path(__file__).resolve().parents[1] / "src"))
 
 from counterpunch.buckets import add_attack_buckets
 from counterpunch.loss_events import add_loss_flags
-from counterpunch.metric import find_counterpunch_opportunities, score_opportunities
+from counterpunch.metric import (
+    find_counterpunch_opportunities,
+    prepare_scorable_pitches,
+    score_opportunities,
+)
 
 
 def parse_args():
@@ -61,12 +65,16 @@ def main():
     df = add_attack_buckets(df)
     df = add_loss_flags(df)
 
-    opportunities = find_counterpunch_opportunities(df, threshold=args.threshold)
+    scorable = prepare_scorable_pitches(df)
+    opportunities = find_counterpunch_opportunities(
+        df, threshold=args.threshold, scorable=scorable
+    )
     scores = score_opportunities(
         df,
         opportunities,
         threshold=args.threshold,
         show_progress=True,
+        scorable=scorable,
     )
 
     name = hitter_name(args.batter)

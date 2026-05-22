@@ -31,9 +31,23 @@ def assign_count_bucket(row):
 
 def add_attack_buckets(df):
     df = df.copy()
-    df["pitch_group"] = df["pitch_type"].apply(assign_pitch_group)
-    df["location_bucket"] = df["zone"].apply(assign_location_bucket)
-    df["count_bucket"] = df.apply(assign_count_bucket, axis=1)
+
+    df["pitch_group"] = "other"
+    df.loc[df["pitch_type"].isin({"FF", "SI", "FA"}), "pitch_group"] = "fastball"
+    df.loc[df["pitch_type"] == "FC", "pitch_group"] = "cutter"
+    df.loc[
+        df["pitch_type"].isin({"SL", "ST", "CU", "KC", "SV"}), "pitch_group"
+    ] = "breaking"
+    df.loc[df["pitch_type"].isin({"CH", "FS"}), "pitch_group"] = "offspeed"
+
+    df["location_bucket"] = "waste"
+    df.loc[df["zone"].isin(range(1, 10)), "location_bucket"] = "heart"
+    df.loc[df["zone"].isin(range(11, 15)), "location_bucket"] = "chase"
+
+    df["count_bucket"] = "even"
+    df.loc[df["strikes"] > df["balls"], "count_bucket"] = "ahead"
+    df.loc[df["balls"] > df["strikes"], "count_bucket"] = "behind"
+
     df["attack_bucket"] = (
         df["pitch_group"] + "|" + df["location_bucket"] + "|" + df["count_bucket"]
     )
