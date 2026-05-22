@@ -88,6 +88,7 @@ def format_leaderboard(leaderboard, start, end, min_opportunities, threshold):
         "counterpunch_index",
         "repeat_delta_run_exp",
         "baseline_delta_run_exp",
+        "avg_baseline_sample_size",
     ]
     return leaderboard[cols]
 

@@ -116,6 +116,7 @@ def score_opportunities(
                 "loss_delta_run_exp": loss_pitch["delta_run_exp"],
                 "repeat_delta_run_exp": repeat_outcome,
                 "baseline_delta_run_exp": baseline,
+                "baseline_sample_size": baseline_count,
                 "opportunity_score": repeat_outcome - baseline,
             }
         )
@@ -133,6 +134,7 @@ def summarize_hitter_scores(scores):
             opportunities=("opportunity_score", "size"),
             repeat_delta_run_exp=("repeat_delta_run_exp", "mean"),
             baseline_delta_run_exp=("baseline_delta_run_exp", "mean"),
+            avg_baseline_sample_size=("baseline_sample_size", "mean"),
             counterpunch_index=("opportunity_score", "mean"),
         )
         .reset_index()

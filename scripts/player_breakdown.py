@@ -46,6 +46,7 @@ def print_grouped(scores, group_cols):
             opportunities=("opportunity_score", "size"),
             repeat_delta_run_exp=("repeat_delta_run_exp", "mean"),
             baseline_delta_run_exp=("baseline_delta_run_exp", "mean"),
+            avg_baseline_sample_size=("baseline_sample_size", "mean"),
             counterpunch_index=("opportunity_score", "mean"),
         )
         .sort_values("counterpunch_index")
@@ -91,6 +92,7 @@ def main():
         scores[[
             "repeat_delta_run_exp",
             "baseline_delta_run_exp",
+            "baseline_sample_size",
             "opportunity_score",
         ]].mean()
     )

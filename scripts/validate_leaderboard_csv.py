@@ -14,6 +14,7 @@ REQUIRED_COLUMNS = [
     "counterpunch_index",
     "repeat_delta_run_exp",
     "baseline_delta_run_exp",
+    "avg_baseline_sample_size",
 ]
 
 
@@ -63,6 +64,12 @@ def main():
     if not below_min.empty:
         warnings.append(f"{len(below_min)} rows are below min_opportunities")
 
+    invalid_baseline_sample = df[df["avg_baseline_sample_size"] <= 0]
+    if not invalid_baseline_sample.empty:
+        warnings.append(
+            f"{len(invalid_baseline_sample)} rows have non-positive avg_baseline_sample_size"
+        )
+
     expected_score = df["repeat_delta_run_exp"] - df["baseline_delta_run_exp"]
     max_score_error = (df["counterpunch_index"] - expected_score).abs().max()
     if max_score_error > args.tolerance:
@@ -93,6 +100,9 @@ def main():
 
     print("\nCounterpunch Index summary:")
     print(df["counterpunch_index"].describe())
+
+    print("\nAverage baseline sample size summary:")
+    print(df["avg_baseline_sample_size"].describe())
 
     print("\nScore arithmetic:")
     print(f"max abs error: {max_score_error}")

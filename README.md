@@ -79,6 +79,7 @@ opportunities
 counterpunch_index
 repeat_delta_run_exp
 baseline_delta_run_exp
+avg_baseline_sample_size
 ```
 
 Always interpret rankings with sample size.

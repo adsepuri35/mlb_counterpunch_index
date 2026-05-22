@@ -46,6 +46,7 @@ For each matched repeat pitch:
 
 ```text
 baseline = hitter average delta_run_exp for same pitch_group + count_bucket + nearby repeat location
+baseline_sample_size = count of nearby baseline pitches, excluding the repeat pitch
 opportunity_score = repeat_pitch_delta_run_exp - baseline
 ```
 
@@ -56,6 +57,7 @@ The repeat pitch is excluded from its own baseline.
 ```text
 counterpunch_index = average(opportunity_score)
 opportunities = number of matched repeat attacks
+avg_baseline_sample_size = average baseline_sample_size across scored opportunities
 ```
 
 Leaderboards must show sample size alongside the score.
